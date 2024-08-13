@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:8.0.0-rc16-noble
+    container_name: mongodb
+    ports:
+      - 27018:27017
+    volumes:
+      - mongo-data:/data/db
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - 9213:9200
+      - 9313:9300
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+  redis:  
+    image: redis
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.14.2
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - 5613:5601
+    depends_on:
+      - elasticsearch
+    
+  springboot-app:
+    build: .
+    image: quanle031002/crud-mongodb-app:1.0
+    container_name: crud-mongodb-app
+    depends_on:
+      - mongodb	
+      - elasticsearch
+      - redis
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/quan
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - openapi_service_title=Quan
+      - openapi_service_version=1.0.0
+      - openapi_service_server=http://localhost:8080
+    ports:
+      - 8081:8080
+    restart: unless-stopped
+volumes:
+  esdata:
+  mongo-data:
