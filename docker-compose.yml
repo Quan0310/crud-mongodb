@@ -35,7 +35,7 @@ services:
     
   springboot-app:
     build: .
-    image: quanle031002/crud-mongodb-app:1.0
+    image: quanle031002/crud-mongodb-app:1.1
     container_name: crud-mongodb-app
     depends_on:
       - mongodb	
